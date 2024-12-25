@@ -1,8 +1,8 @@
 package test
 
 // @method GET
-// @router {baseurl}/api/example
-// type JSON
+
+// @type JSON
 func ExampleAPI() {
 
 }

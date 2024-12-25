@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"main/fe"
 	"main/log"
 	"os"
 	"sync"
@@ -14,7 +15,7 @@ import (
 // 此函数也会单独开协程处理
 func generateDocString(file *os.File) (string, bool) {
 	filename := getFileName(file)
-	praser := NewParser(filename)
+	praser := NewParser(filename, fe.NOW+"/"+file.Name())
 	wg := sync.WaitGroup{}
 	stop := false
 	wg.Add(2)
@@ -26,7 +27,8 @@ func generateDocString(file *os.File) (string, bool) {
 			line, isPerfix, err := reader.ReadLine()
 			if errors.Is(err, io.EOF) {
 				wg.Done()
-				log.LogInfo(fmt.Sprintf("Successfully read %s", filename))
+				stop = true
+				log.LogInfo(fmt.Sprintf("Finish reading %s", filename))
 				// fmt.Println(fe.Green, )
 				break
 			} else if err != nil {
@@ -35,12 +37,13 @@ func generateDocString(file *os.File) (string, bool) {
 				// fmt.Println(fe.Yellow, "[READ ERROR]", fe.Red)
 				break
 			}
-			if !isPerfix {
+			if isPerfix {
 				// 表示这一行过长，应该重新读取
-				log.LogError(log.READ_ERROR, fmt.Sprintf("file:%s line %d failed to read because it's too long", filename, lineCount))
+				log.LogError(log.READ_ERROR, fmt.Sprintf("failed to read file:%s line %d because it's too long", filename, lineCount))
 				// fmt.Println(fe.Yellow, "[READ ERROR]", fe.Red, ), fe.Reset)
 				continue
 			}
+			// fmt.Println("Queue Len", praser.QueueLen())
 			praser.EnQueue(line)
 		}
 	}()
@@ -60,7 +63,7 @@ func generateDocString(file *os.File) (string, bool) {
 			// 如果队列为空，就等待
 			continue
 		}
-		// 这里反复更新
+		// 这里反复处理
 		singleDeal(praser)
 	}
 	wg.Wait()
@@ -69,7 +72,5 @@ func generateDocString(file *os.File) (string, bool) {
 
 // 单次的出队然后解析
 func singleDeal(praser Parser) {
-	praser.Update()
 	praser.Parse()
-	praser.WriteIntoFile()
 }

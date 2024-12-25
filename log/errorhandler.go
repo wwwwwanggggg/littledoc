@@ -10,6 +10,7 @@ const (
 	PATH_ERROR
 	READ_ERROR
 	GENERATING_ERROR
+	CONTENT_ERROR
 )
 
 var ErrMap = []string{
@@ -17,6 +18,7 @@ var ErrMap = []string{
 	"[PATH ERROR]",
 	"[READ ERROR]",
 	"[GENERATING ERORR]",
+	"[CONTENT ERROR]",
 }
 
 func LogError(errType int, errMsg string) {
